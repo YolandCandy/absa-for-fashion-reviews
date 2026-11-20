@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>ABSA Shopee Collector</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      width: 350px;
+      margin: 0;
+      padding: 12px;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      color: #ee4d2d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .stars-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .stars-row label {
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 7px;
+      font-size: 12.5px;
+    }
+    input[type="number"], select {
+      padding: 4px 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    input[type="number"] { width: 65px; }
+    select { max-width: 195px; }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 5px;
+      padding: 5px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    #btnStart { background: #ee4d2d; color: #fff; }
+    #btnStart:disabled { background: #fca5a5; cursor: not-allowed; }
+    #btnStop { background: #64748b; color: #fff; }
+    .status {
+      font-size: 12px;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 8px;
+      border-radius: 6px;
+      min-height: 32px;
+      word-break: break-word;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .stat-box {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 4px;
+      padding: 4px 2px;
+    }
+    .badge-ok { font-size: 11px; color: #16a34a; font-weight: 600; }
+    .badge-err { font-size: 11px; color: #dc2626; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h2>
+    ABSA Shopee Collector
+    <span id="serverBadge" class="badge-err">Server: Offline</span>
+  </h2>
+
+  <div class="card">
+    <div style="font-size: 12.5px; font-weight: 600;">Chọn mức sao cần thu thập:</div>
+    <div class="stars-row">
+      <label><input type="checkbox" class="star-cb" value="1" checked /> 1★</label>
+      <label><input type="checkbox" class="star-cb" value="2" checked /> 2★</label>
+      <label><input type="checkbox" class="star-cb" value="3" checked /> 3★</label>
+      <label><input type="checkbox" class="star-cb" value="4" checked /> 4★</label>
+      <label><input type="checkbox" class="star-cb" value="5" checked /> 5★</label>
+    </div>
+    <div class="row">
+      <span>Chế độ nguồn SP:</span>
+      <select id="crawlMode">
+        <option value="keyword_sales" selected>Bán chạy &amp; Xoay từ khóa</option>
+        <option value="related_hop">Nhảy theo SP liên quan</option>
+      </select>
+    </div>
+    <div class="row">
+      <span>Lượt bán tối thiểu:</span>
+      <input type="number" id="minSoldCount" value="500" min="0" step="100" />
+    </div>
+    <div class="row">
+      <span>Số sản phẩm tối đa/phiên:</span>
+      <input type="number" id="maxProducts" value="30" min="1" max="500" />
+    </div>
+    <div class="row">
+      <span>Nghỉ 60s sau mỗi (SP):</span>
+      <input type="number" id="batchPauseEveryN" value="10" min="0" max="100" />
+    </div>
+    <div id="keywordsBox" style="margin-top: 7px;">
+      <div class="row" style="margin-top: 4px;">
+        <span>Chỉ tiêu / từ khóa (Min – Max):</span>
+        <span style="display:flex; gap:4px; align-items:center;">
+          <input type="number" id="minPerKw" value="15" min="1" max="200" style="width:48px;" title="Tối thiểu SP mỗi từ khóa" />
+          <span>–</span>
+          <input type="number" id="maxPerKw" value="25" min="1" max="500" style="width:48px;" title="Tối đa SP mỗi từ khóa" />
+        </span>
+      </div>
+      <div style="font-size: 11px; color: #475569; margin-top: 5px;">
+        Từ khóa (hỗ trợ ghi riêng <code>từ khóa:min:max</code>):
+      </div>
+      <textarea id="keywordsInput" rows="2">đồ bộ nữ mặc nhà:20:30, quần jean nữ:15:25, quần ống rộng nữ:15:25, váy đầm nữ:15:25, áo sơ mi nữ:15:25</textarea>
+    </div>
+    <div class="btn-group">
+      <button id="btnStart">▶ Bắt đầu Crawl</button>
+      <button id="btnStop">⏹ Dừng</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size: 12px; font-weight: 600;">Tiến độ trong SQLite (<span id="totalInfo">0 SP / 0 cmt</span>):</div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-box">1★<br><b id="s1">0</b></div>
+      <div class="stat-box">2★<br><b id="s2">0</b></div>
+      <div class="stat-box">3★<br><b id="s3">0</b></div>
+      <div class="stat-box">4★<br><b id="s4">0</b></div>
+      <div class="stat-box">5★<br><b id="s5">0</b></div>
+    </div>
+    <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.45;" id="captchaMetrics">
+      Phiên hiện tại: 0 SP / 0 req | Ngưỡng CAPTCHA: Chưa ghi nhận
+    </div>
+  </div>
+
+  <div class="status" id="statusBox">Đang tải trạng thái...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

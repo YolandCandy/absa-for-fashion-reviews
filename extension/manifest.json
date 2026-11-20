@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "ABSA Shopee Review Collector",
+  "version": "1.0.0",
+  "description": "Thu thập bình luận Shopee cân bằng theo mức sao (1★..5★) phục vụ nghiên cứu ABSA qua Local Python Server.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://shopee.vn/*",
+    "http://127.0.0.1:8765/*",
+    "http://localhost:8765/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ABSA Shopee Collector"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://shopee.vn/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

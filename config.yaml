@@ -1,0 +1,126 @@
+# Cấu hình Hệ thống Crawl Dữ liệu ABSA - Ngành Thời trang nữ (Shopee & TikTok Shop)
+
+project:
+  category: "Thời trang nữ"
+  output_dir: "data/output"
+  by_product_dir: "data/output/by_product"
+  checkpoint_db: "data/checkpoint.db"
+  input_urls_file: "data/input/product_urls.txt"
+  browser_profiles_dir: "browser_profiles"
+
+# Cấu hình Kết nối Trình duyệt Thật qua Remote Debugging (CDP) - Tách riêng Shopee & TikTok
+cdp:
+  shopee:
+    port: 9222
+    endpoint_url: "http://localhost:9222"
+    user_data_dir: "C:/chrome_shopee_profile"
+    start_url: "https://shopee.vn"
+  tiktok:
+    port: 9223
+    endpoint_url: "http://localhost:9223"
+    user_data_dir: "C:/chrome_tiktok_profile"
+    start_url: "https://shop.tiktok.com/vn/c/dresses/889096"
+
+# Cấu hình Tự động Chuyển sang Sản phẩm Liên quan (Related Product Auto-Hopping)
+related_hopping:
+  enabled: true
+  fashion_keywords_filter:
+    - "áo"
+    - "ao-"
+    - "váy"
+    - "vay-"
+    - "đầm"
+    - "dam-"
+    - "quần"
+    - "quan-"
+    - "chân váy"
+    - "chan-vay"
+    - "cardigan"
+    - "blazer"
+    - "set"
+    - "đồ bộ"
+    - "do-bo"
+    - "sơ mi"
+    - "so-mi"
+    - "khoác"
+    - "khoac"
+    - "jeans"
+    - "jean"
+    - "thun"
+    - "len"
+    - "babydoll"
+    - "croptop"
+    - "bikini"
+    - "yếm"
+    - "nữ"
+    - "nu-"
+
+# Danh sách từ khóa tìm kiếm sản phẩm tự động ngành Thời trang nữ
+discovery:
+  keywords:
+    - "áo thun nữ"
+    - "váy đầm nữ"
+    - "quần jean nữ"
+    - "áo sơ mi nữ"
+    - "chân váy nữ"
+    - "áo khoác nữ"
+    - "đồ bộ nữ mặc nhà"
+    - "áo kiểu nữ"
+    - "quần ống rộng nữ"
+    - "đầm dự tiệc nữ"
+    - "áo cardigan nữ"
+    - "áo blazer nữ"
+  min_products_per_keyword: 15
+  max_products_per_keyword: 25
+  min_product_total_reviews: 60
+
+# Cấu hình Local Receiver Server cho Chrome Extension (Manifest V3)
+server:
+  host: "127.0.0.1"
+  port: 8765
+
+# Cấu hình thu thập bình luận trên mỗi sản phẩm
+product_review_limits:
+  min_comments_per_product: 60
+  max_comments_per_product: 100
+  max_per_star_per_product: 20 # Trần tối đa mỗi mức sao trên 1 SP (giúp cân bằng 1★..5★ trong từng SP)
+  max_products_per_shop: 0 # 0 = Không giới hạn số sản phẩm trên cùng 1 shop
+  enable_noise_filter: true # Bật lọc bình luận rác (văn mẫu AI, link quảng cáo, ký tự vô nghĩa)
+  max_pages_per_star_tab: 10 # Số trang tối đa lật trên mỗi tab mức sao của 1 sản phẩm
+  require_non_empty_text: true # Chỉ lấy bình luận có nội dung chữ phục vụ ABSA
+  min_text_length: 5 # Độ dài tối thiểu của review_text (ký tự)
+
+# Cấu hình ưu tiên độ mới của bình luận (Thời gian 1 năm trở lại đây)
+time_filter:
+  prefer_recent_days: 365 # Ưu tiên lấy bình luận trong vòng 365 ngày gần nhất trước
+  strict_max_age: false # false = Không cắt cứng (nếu thiếu vẫn cho phép lấy review cũ hơn 1 năm)
+
+# Cấu hình Cân bằng dữ liệu theo rating_star (1★ - 5★) & Chọn riêng mức sao
+rating_balance:
+  # Danh sách các mức sao muốn thu thập (có thể ghi đè qua CLI: --stars 1,2,3)
+  target_stars: [1, 2, 3, 4, 5]
+  # Quota mục tiêu cho từng mức sao trên toàn bộ dataset (Ví dụ: 3,000 * 5 = 15,000 cmt; chỉnh lên 6,000 nếu muốn 30,000 cmt)
+  quota_per_star:
+    1: 3000
+    2: 3000
+    3: 3000
+    4: 3000
+    5: 3000
+  # Thứ tự ưu tiên click các tab sao trên mỗi sản phẩm (ưu tiên sao hiếm 1,2,3,4 trước rồi mới tới 5)
+  star_priority_order: [1, 2, 3, 4, 5]
+
+# Cấu hình Trình duyệt, Giãn cách chống chặn IP & Cảnh báo Bắt buộc
+anti_blocking:
+  use_real_chrome: true
+  headless: false
+  viewport_width: 1366
+  viewport_height: 820
+  page_delay_range: [3.0, 5.5] # Thời gian nghỉ ngẫu nhiên giữa mỗi lần lật trang bình luận (giây)
+  star_tab_delay_range: [2.5, 4.5] # Thời gian nghỉ khi chuyển tab lọc sao 1★..5★ (giây)
+  product_delay_range: [6.0, 12.0] # Thời gian nghỉ khi chuyển sang sản phẩm liên quan tiếp theo (giây)
+  batch_pause_every_n_products: 15 # Sau mỗi 15 sản phẩm sẽ tự động nghỉ giải lao
+  batch_pause_duration_range: [60, 120] # Thời gian nghỉ giải lao giữa các chặng (giây)
+  mandatory_captcha_alert:
+    audio_beep: true
+    popup_messagebox: true
+    pause_until_resolved: true

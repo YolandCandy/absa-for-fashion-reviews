@@ -1,0 +1,6 @@
+.env
+browser_profiles/
+data/checkpoint.db
+__pycache__/
+.pytest_cache/
+data
