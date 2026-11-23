@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <title>ABSA Shopee Collector</title>
@@ -12,6 +13,7 @@
       background: #f8fafc;
       color: #1e293b;
     }
+
     h2 {
       margin: 0 0 8px 0;
       font-size: 15px;
@@ -20,6 +22,7 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .card {
       background: #fff;
       border: 1px solid #e2e8f0;
@@ -27,17 +30,20 @@
       padding: 10px 12px;
       margin-bottom: 8px;
     }
+
     .stars-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 6px;
     }
+
     .stars-row label {
       font-size: 13px;
       cursor: pointer;
       user-select: none;
     }
+
     .row {
       display: flex;
       justify-content: space-between;
@@ -45,14 +51,23 @@
       margin-top: 7px;
       font-size: 12.5px;
     }
-    input[type="number"], select {
+
+    input[type="number"],
+    select {
       padding: 4px 6px;
       border: 1px solid #cbd5e1;
       border-radius: 4px;
       font-size: 12px;
     }
-    input[type="number"] { width: 65px; }
-    select { max-width: 195px; }
+
+    input[type="number"] {
+      width: 65px;
+    }
+
+    select {
+      max-width: 195px;
+    }
+
     textarea {
       width: 100%;
       box-sizing: border-box;
@@ -64,11 +79,13 @@
       font-family: inherit;
       resize: vertical;
     }
+
     .btn-group {
       display: flex;
       gap: 8px;
       margin-top: 10px;
     }
+
     button {
       flex: 1;
       padding: 8px;
@@ -78,9 +95,22 @@
       cursor: pointer;
       font-size: 13px;
     }
-    #btnStart { background: #ee4d2d; color: #fff; }
-    #btnStart:disabled { background: #fca5a5; cursor: not-allowed; }
-    #btnStop { background: #64748b; color: #fff; }
+
+    #btnStart {
+      background: #ee4d2d;
+      color: #fff;
+    }
+
+    #btnStart:disabled {
+      background: #fca5a5;
+      cursor: not-allowed;
+    }
+
+    #btnStop {
+      background: #64748b;
+      color: #fff;
+    }
+
     .status {
       font-size: 12px;
       color: #334155;
@@ -90,6 +120,7 @@
       min-height: 32px;
       word-break: break-word;
     }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -98,16 +129,28 @@
       text-align: center;
       font-size: 11px;
     }
+
     .stat-box {
       background: #fff7ed;
       border: 1px solid #fed7aa;
       border-radius: 4px;
       padding: 4px 2px;
     }
-    .badge-ok { font-size: 11px; color: #16a34a; font-weight: 600; }
-    .badge-err { font-size: 11px; color: #dc2626; font-weight: 600; }
+
+    .badge-ok {
+      font-size: 11px;
+      color: #16a34a;
+      font-weight: 600;
+    }
+
+    .badge-err {
+      font-size: 11px;
+      color: #dc2626;
+      font-weight: 600;
+    }
   </style>
 </head>
+
 <body>
   <h2>
     ABSA Shopee Collector
@@ -132,7 +175,7 @@
     </div>
     <div class="row">
       <span>Lượt bán tối thiểu:</span>
-      <input type="number" id="minSoldCount" value="500" min="0" step="100" />
+      <input type="number" id="minSoldCount" value="5000" min="0" step="100" />
     </div>
     <div class="row">
       <span>Số sản phẩm tối đa/phiên:</span>
@@ -146,15 +189,18 @@
       <div class="row" style="margin-top: 4px;">
         <span>Chỉ tiêu / từ khóa (Min – Max):</span>
         <span style="display:flex; gap:4px; align-items:center;">
-          <input type="number" id="minPerKw" value="15" min="1" max="200" style="width:48px;" title="Tối thiểu SP mỗi từ khóa" />
+          <input type="number" id="minPerKw" value="15" min="1" max="200" style="width:48px;"
+            title="Tối thiểu SP mỗi từ khóa" />
           <span>–</span>
-          <input type="number" id="maxPerKw" value="25" min="1" max="500" style="width:48px;" title="Tối đa SP mỗi từ khóa" />
+          <input type="number" id="maxPerKw" value="25" min="1" max="500" style="width:48px;"
+            title="Tối đa SP mỗi từ khóa" />
         </span>
       </div>
       <div style="font-size: 11px; color: #475569; margin-top: 5px;">
         Từ khóa (hỗ trợ ghi riêng <code>từ khóa:min:max</code>):
       </div>
-      <textarea id="keywordsInput" rows="2">đồ bộ nữ mặc nhà:20:30, quần jean nữ:15:25, quần ống rộng nữ:15:25, váy đầm nữ:15:25, áo sơ mi nữ:15:25</textarea>
+      <textarea id="keywordsInput"
+        rows="2">quần tây nữ công sở:15:25, quần ống rộng nữ:15:25, quần legging nữ:10:15, quần jeans nữ:10:15, áo sơ mi nữ:8:12, chân váy nữ:5:10</textarea>
     </div>
     <div class="btn-group">
       <button id="btnStart">▶ Bắt đầu Crawl</button>
@@ -163,7 +209,8 @@
   </div>
 
   <div class="card">
-    <div style="font-size: 12px; font-weight: 600;">Tiến độ trong SQLite (<span id="totalInfo">0 SP / 0 cmt</span>):</div>
+    <div style="font-size: 12px; font-weight: 600;">Tiến độ trong SQLite (<span id="totalInfo">0 SP / 0 cmt</span>):
+    </div>
     <div class="stats-grid" id="statsGrid">
       <div class="stat-box">1★<br><b id="s1">0</b></div>
       <div class="stat-box">2★<br><b id="s2">0</b></div>
@@ -180,4 +227,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

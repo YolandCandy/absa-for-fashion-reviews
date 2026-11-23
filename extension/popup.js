@@ -118,6 +118,13 @@ document.getElementById("btnStart").addEventListener("click", () => {
     }
   }
 
+  const keywordsText = document.getElementById("keywordsInput").value;
+  chrome.storage.local.set({
+    uiMinPerKw: minPerKw,
+    uiMaxPerKw: maxPerKw,
+    uiKeywordsText: keywordsText
+  });
+
   chrome.runtime.sendMessage(
     {
       type: "START_CRAWL",
@@ -141,6 +148,53 @@ document.getElementById("btnStop").addEventListener("click", () => {
   });
 });
 
+function restoreSavedSettings() {
+  chrome.storage.local.get(
+    [
+      "targetStars",
+      "crawlMode",
+      "minSoldCount",
+      "maxProducts",
+      "batchPauseEveryN",
+      "uiMinPerKw",
+      "uiMaxPerKw",
+      "uiKeywordsText"
+    ],
+    (st) => {
+      if (Array.isArray(st.targetStars) && st.targetStars.length > 0) {
+        const starSet = new Set(st.targetStars.map(Number));
+        document.querySelectorAll(".star-cb").forEach((cb) => {
+          cb.checked = starSet.has(Number(cb.value));
+        });
+      }
+      if (st.crawlMode) {
+        document.getElementById("crawlMode").value = st.crawlMode;
+        document.getElementById("keywordsBox").style.display =
+          st.crawlMode === "keyword_sales" ? "block" : "none";
+      }
+      if (st.minSoldCount !== undefined && st.minSoldCount !== null) {
+        document.getElementById("minSoldCount").value = st.minSoldCount;
+      }
+      if (st.maxProducts !== undefined && st.maxProducts !== null) {
+        document.getElementById("maxProducts").value = st.maxProducts;
+      }
+      if (st.batchPauseEveryN !== undefined && st.batchPauseEveryN !== null) {
+        document.getElementById("batchPauseEveryN").value = st.batchPauseEveryN;
+      }
+      if (st.uiMinPerKw !== undefined) {
+        document.getElementById("minPerKw").value = st.uiMinPerKw;
+      }
+      if (st.uiMaxPerKw !== undefined) {
+        document.getElementById("maxPerKw").value = st.uiMaxPerKw;
+      }
+      if (typeof st.uiKeywordsText === "string" && st.uiKeywordsText.trim()) {
+        document.getElementById("keywordsInput").value = st.uiKeywordsText;
+      }
+    }
+  );
+}
+
+restoreSavedSettings();
 refreshServerStats().then(refreshLocalState);
 setInterval(() => {
   refreshServerStats().then(refreshLocalState);

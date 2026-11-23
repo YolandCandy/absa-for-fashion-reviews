@@ -82,11 +82,11 @@ server:
 # Cấu hình thu thập bình luận trên mỗi sản phẩm
 product_review_limits:
   min_comments_per_product: 60
-  max_comments_per_product: 100
-  max_per_star_per_product: 20 # Trần tối đa mỗi mức sao trên 1 SP (giúp cân bằng 1★..5★ trong từng SP)
+  max_comments_per_product: 250
+  max_per_star_per_product: 60 # Trần tối đa mỗi mức sao trên 1 SP (giúp cân bằng 1★..5★ trong từng SP)
   max_products_per_shop: 0 # 0 = Không giới hạn số sản phẩm trên cùng 1 shop
   enable_noise_filter: true # Bật lọc bình luận rác (văn mẫu AI, link quảng cáo, ký tự vô nghĩa)
-  max_pages_per_star_tab: 10 # Số trang tối đa lật trên mỗi tab mức sao của 1 sản phẩm
+  max_pages_per_star_tab: 20 # Số trang tối đa lật trên mỗi tab mức sao của 1 sản phẩm
   require_non_empty_text: true # Chỉ lấy bình luận có nội dung chữ phục vụ ABSA
   min_text_length: 5 # Độ dài tối thiểu của review_text (ký tự)
 
@@ -101,11 +101,11 @@ rating_balance:
   target_stars: [1, 2, 3, 4, 5]
   # Quota mục tiêu cho từng mức sao trên toàn bộ dataset (Ví dụ: 3,000 * 5 = 15,000 cmt; chỉnh lên 6,000 nếu muốn 30,000 cmt)
   quota_per_star:
-    1: 3000
-    2: 3000
-    3: 3000
-    4: 3000
-    5: 3000
+    1: 2500
+    2: 2000
+    3: 2500
+    4: 3500
+    5: 7500
   # Thứ tự ưu tiên click các tab sao trên mỗi sản phẩm (ưu tiên sao hiếm 1,2,3,4 trước rồi mới tới 5)
   star_priority_order: [1, 2, 3, 4, 5]
 

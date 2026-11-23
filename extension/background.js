@@ -6,7 +6,7 @@ const DEFAULT_STATE = {
   running: false,
   targetStars: [1, 2, 3, 4, 5],
   crawlMode: "keyword_sales",
-  minSoldCount: 500,
+  minSoldCount: 5000,
   maxProducts: 30,
   batchPauseEveryN: 10,
   keywordConfigs: [],
@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         running: true,
         targetStars: msg.targetStars || [1, 2, 3, 4, 5],
         crawlMode: msg.crawlMode || "keyword_sales",
-        minSoldCount: Number(msg.minSoldCount || 500),
+        minSoldCount: Number(msg.minSoldCount ?? 500),
         maxProducts: Number(msg.maxProducts || 30),
         batchPauseEveryN: Number(msg.batchPauseEveryN || 10),
         keywordConfigs: msg.keywordConfigs || [],
@@ -60,7 +60,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             { target: { tabId: tab.id }, files: ["content.js"] },
             () => {
               setTimeout(() => {
-                chrome.tabs.sendMessage(tab.id, { type: "RUN_PRODUCT_CRAWL" }).catch(() => {});
+                chrome.tabs.sendMessage(tab.id, { type: "RUN_PRODUCT_CRAWL" }).catch(() => { });
               }, 300);
             }
           );
@@ -100,9 +100,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     chrome.action.setBadgeBackgroundColor({ color: "#dc2626" });
 
     if (sender.tab && sender.tab.id) {
-      chrome.tabs.update(sender.tab.id, { active: true }).catch(() => {});
+      chrome.tabs.update(sender.tab.id, { active: true }).catch(() => { });
       if (sender.tab.windowId) {
-        chrome.windows.update(sender.tab.windowId, { focused: true }).catch(() => {});
+        chrome.windows.update(sender.tab.windowId, { focused: true }).catch(() => { });
       }
     }
 
@@ -128,7 +128,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         products_before_captcha: productsCount,
         requests_before_captcha: requestsCount
       })
-    }).catch(() => {});
+    }).catch(() => { });
 
     return false;
   }
@@ -140,7 +140,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (!state.running || tabId !== state.activeTabId) return;
     if (tab.url && tab.url.includes("shopee.vn")) {
       setTimeout(() => {
-        chrome.tabs.sendMessage(tabId, { type: "RUN_PRODUCT_CRAWL" }).catch(() => {});
+        chrome.tabs.sendMessage(tabId, { type: "RUN_PRODUCT_CRAWL" }).catch(() => { });
       }, 1500);
     }
   });

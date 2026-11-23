@@ -161,18 +161,42 @@ function extractDomMetadata() {
 
 function parseSoldCountFromCard(cardText) {
   if (!cardText) return null;
-  const m = cardText.match(/(?:đã\s*bán\s*([\d.,]+)\s*(k|tr)?|([\d.,]+)\s*(k|m)?\+?\s*sold)/i);
+  const m = cardText.match(
+    /(?:(?:đã\s*)?bán\s*([\d.,]+)\s*(k|tr|m)?\+?|\b([\d.,]+)\s*(k|tr|m)?\+?\s*(?:đã\s*bán|sold)\b)/i
+  );
   if (!m) return null;
-  const rawNum = (m[1] || m[3] || "").replace(",", ".");
+  const raw = (m[1] || m[3] || "").trim();
   const unit = (m[2] || m[4] || "").toLowerCase();
-  let val = parseFloat(rawNum);
+  if (!raw) return null;
+
+  let normalized = raw;
+  if (unit) {
+    // Co don vi (1,2k / 1.5tr): coi dau phay hoac cham la thap phan
+    normalized = raw.replace(",", ".");
+  } else if (/^\d{1,3}([.,]\d{3})+$/.test(raw)) {
+    // Khong co don vi va theo dang 1.200 / 1,200 -> tach hang nghin
+    normalized = raw.replace(/[.,]/g, "");
+  } else {
+    normalized = raw.replace(",", ".");
+  }
+
+  let val = parseFloat(normalized);
   if (isNaN(val)) return null;
   if (unit === "k") val *= 1000;
   else if (unit === "tr" || unit === "m") val *= 1000000;
   return Math.round(val);
 }
 
-function collectProductCandidatesFromDom(excludeProductId = "", visitedUrls = [], minSoldCount = 500) {
+function extractSoldCountFromDetailPage() {
+  const scope =
+    document.querySelector("main") ||
+    document.querySelector('[role="main"]') ||
+    document.body;
+  const topText = (scope && scope.innerText ? scope.innerText : "").slice(0, 2500);
+  return parseSoldCountFromCard(topText);
+}
+
+function collectProductCandidatesFromDom(excludeProductId = "", visitedUrls = [], minSoldCount = 5000) {
   const visitedSet = new Set(visitedUrls.map((u) => u.split("?")[0]));
   const anchors = Array.from(document.querySelectorAll("a[href*='-i.'], a[href*='/product/']"));
   const candidates = [];
@@ -189,8 +213,15 @@ function collectProductCandidatesFromDom(excludeProductId = "", visitedUrls = []
     if (pid === excludeProductId || seenPids.has(pid) || visitedSet.has(fullUrl)) continue;
 
     const cardText = a.innerText || "";
-    const soldCount = parseSoldCountFromCard(cardText);
-    if (soldCount !== null && soldCount < minSoldCount) {
+    const containerText =
+      (a.closest("[data-sqe='item']") && a.closest("[data-sqe='item']").innerText) ||
+      (a.parentElement && a.parentElement.innerText) ||
+      "";
+    const soldCount =
+      parseSoldCountFromCard(cardText) ?? parseSoldCountFromCard(containerText);
+
+    // Fail-closed: khi bat loc minSoldCount > 0, neu khong doc duoc luot ban hoac < nguong thi bo qua
+    if (minSoldCount > 0 && (soldCount === null || soldCount < minSoldCount)) {
       continue;
     }
 
@@ -233,19 +264,42 @@ async function filterUnvisitedViaServer(candidates) {
   return candidates.map((c) => c.url);
 }
 
+async function waitForSelector(selectors, timeoutMs = 6000, intervalMs = 300) {
+  const list = Array.isArray(selectors) ? selectors : [selectors];
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (stopRequested) return null;
+    for (const sel of list) {
+      const el = document.querySelector(sel);
+      if (el) return el;
+    }
+    await sleep(intervalMs);
+  }
+  return null;
+}
+
 async function scrollToRatingsSection() {
-  for (let step = 0; step < 12; step++) {
+  for (let step = 0; step < 16; step++) {
     if (stopRequested) return false;
     const sec =
       document.querySelector("div.product-rating-overview") ||
       document.querySelector("div.product-ratings");
     if (sec) {
       sec.scrollIntoView({ behavior: "smooth", block: "center" });
-      await sleep(1000);
+      await waitForSelector(
+        [
+          "div.product-rating-overview__filter",
+          "div[data-cmtid]",
+          "div.shopee-product-rating"
+        ],
+        5000,
+        300
+      );
+      await sleep(600);
       return true;
     }
-    window.scrollBy({ top: 1200, behavior: "auto" });
-    await sleep(350);
+    window.scrollBy({ top: 850, behavior: "smooth" });
+    await sleep(700);
   }
   return false;
 }
@@ -473,7 +527,7 @@ async function runProductCrawl() {
       return;
     }
 
-    const minSoldCount = Number(state.minSoldCount || 500);
+    const minSoldCount = Number(state.minSoldCount ?? 5000);
     const crawlMode = state.crawlMode || "keyword_sales";
     const kwConfigs = state.keywordConfigs || [];
     const kwIdx = Number(state.keywordIndex || 0);
@@ -483,11 +537,14 @@ async function runProductCrawl() {
 
     // 1. Đang ở trang Tìm kiếm / Danh mục Bán chạy
     if (!ids) {
-      await updateStatus(`🔍 Đang quét trang Bán chạy (lọc >= ${minSoldCount} lượt bán)...`);
+      await updateStatus(`🔍 Đang chờ tải & quét trang Bán chạy (lọc >= ${minSoldCount} lượt bán)...`);
+      await waitForSelector(["a[href*='-i.']", "a[href*='/product/']"], 6000, 300);
       for (let i = 0; i < 4; i++) {
-        window.scrollBy({ top: 1100, behavior: "auto" });
-        await sleep(600);
+        if (stopRequested) return;
+        window.scrollBy({ top: 900, behavior: "smooth" });
+        await sleep(900);
       }
+      await sleep(600);
 
       const rawCandidates = collectProductCandidatesFromDom("", state.visitedUrls || [], minSoldCount);
       const filteredLinks = await filterUnvisitedViaServer(rawCandidates);
@@ -547,7 +604,28 @@ async function runProductCrawl() {
     let newCrawledForKw = Number(state.crawledForCurrentKw || 0);
 
     if (!shouldSkip && neededStars.length > 0) {
-      await sleep(800);
+      await waitForSelector(["h1"], 6000, 300);
+      await sleep(500);
+      const detailSoldCount = extractSoldCountFromDetailPage();
+      if (minSoldCount > 0 && detailSoldCount !== null && detailSoldCount < minSoldCount) {
+        shouldSkip = true;
+        await updateStatus(
+          `⏭️ Bỏ qua SP (${detailSoldCount} < ${minSoldCount} lượt bán). Chuyển SP kế tiếp...`
+        );
+        fetch(`${LOCAL_SERVER}/api/mark-skipped`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            product_id: productId,
+            url: currentUrl,
+            platform: "shopee",
+            reason: "skipped_low_sold_count"
+          })
+        }).catch(() => { });
+      }
+    }
+
+    if (!shouldSkip && neededStars.length > 0) {
       const meta = extractDomMetadata();
       const foundRatings = await scrollToRatingsSection();
 
@@ -667,7 +745,7 @@ async function runProductCrawl() {
       const rawRelated = collectProductCandidatesFromDom(
         productId,
         latestState.visitedUrls || [],
-        Number(latestState.minSoldCount || 500)
+        Number(latestState.minSoldCount ?? 5000)
       );
       const relatedLinks = await filterUnvisitedViaServer(rawRelated);
       queue = Array.from(new Set([...queue, ...relatedLinks]));
